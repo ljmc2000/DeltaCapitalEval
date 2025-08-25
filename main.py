@@ -22,7 +22,7 @@ async def process_data(ctx):
 
 async def store_data(ctx):
 	'''Task 3 is to store the data. I'm just going to write it to disk'''
-	with ctx.open_file(f"{datetime.now()} results.txt") as output:
+	with ctx.open_file("results.txt") as output:
 		for num in ctx.parent.result:
 			output.write(f"{num}\n")
 
@@ -82,13 +82,17 @@ class Context:
 		else:
 			self.run_id=f'{time_ns()}'
 			os.mkdir(f'logs/{self.run_id}')
-			self.log_file=self.open_file('log')
+			self.log_file=open(f'logs/{self.run_id}/log', 'w+')
+			self.parent=None
 
 	def log(self, line):
 		self.log_file.write(f'{datetime.now()}    {line}\n')
+		self.log_file.flush()
 
 	def open_file(self, filename):
-		return open(f'logs/{self.run_id}/{filename}', 'w+')
+		ufilename=f'{datetime.now()} {filename}'
+		self.log(f'Writing file to disk: {ufilename}')
+		return open(f'logs/{self.run_id}/{ufilename}', 'w+')
 
 # HTTPAPI access
 
@@ -110,6 +114,9 @@ async def execute_tasks(parent_ctx):
 		for on_failure_callback in parent_ctx.current_task.on_failure:
 			ctx.current_task=on_failure_callback
 			await execute_tasks(ctx)
+
+	if parent_ctx.parent==None:
+		ctx.log("Execution complete")
 
 @app.post("/api/execute_flow", status_code=200)
 async def execute_flow(container: FlowContainer, response: Response):
