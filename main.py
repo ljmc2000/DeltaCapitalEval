@@ -2,6 +2,7 @@ import asyncio, httpx, os
 
 from datetime import datetime
 from fastapi import FastAPI, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, validator
 from time import time_ns
 from typing import Any
@@ -92,12 +93,13 @@ class Context:
 
 	def open_file(self, filename):
 		ufilename=f'{datetime.now()} {filename}'
-		self.log(f'Writing file to disk: {ufilename}')
+		self.log(f'Writing file to disk: http://localhost:8000/run/{self.run_id}/{ufilename}')
 		return open(f'logs/{self.run_id}/{ufilename}', 'w+')
 
 # HTTPAPI access
 
 app = FastAPI()
+app.mount('/run/', StaticFiles(directory="logs"), name="logs_dir")
 
 async def execute_tasks(parent_ctx):
 	ctx=Context(parent_ctx)
@@ -144,4 +146,4 @@ async def execute_flow(container: FlowContainer, response: Response):
 	ctx.result = flow.initial_value
 	asyncio.get_event_loop().create_task(execute_tasks(ctx))
 
-	return {"run_id": ctx.run_id}
+	return {"run_id": ctx.run_id, "log": f"http://localhost:8000/run/{ctx.run_id}/log"}
