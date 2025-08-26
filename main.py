@@ -69,6 +69,7 @@ class WorkUnit:
 		self.name=task.name
 		self.description=task.description
 		self.handler=task.handler
+		self.executed=False
 
 		self.on_success=[]
 		self.on_failure=[]
@@ -103,8 +104,13 @@ async def execute_tasks(parent_ctx):
 
 	try:
 		ctx.log(f"Begin task {parent_ctx.current_task.name}")
-		ctx.result=await parent_ctx.current_task.handler(ctx)
-		ctx.log(f"Task {parent_ctx.current_task.name} successful")
+		if not parent_ctx.current_task.executed:
+			parent_ctx.current_task.executed=True
+			ctx.result=await parent_ctx.current_task.handler(ctx)
+			ctx.log(f"Task {parent_ctx.current_task.name} successful")
+		else:
+			ctx.log(f"Task {parent_ctx.current_task.name} loop detected")
+			return
 		for on_success_callback in parent_ctx.current_task.on_success:
 			ctx.current_task=on_success_callback
 			await execute_tasks(ctx)
