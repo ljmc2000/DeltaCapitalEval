@@ -32,7 +32,7 @@ Condition {
 	source_task: string -- The name of a task. Will error if not listed in the tasks above
 	outcome: string -- I'll be honest, I have no idea what this was intended to represent. Unused, not optional.
 	target_task_success: string -- the name of the task that should execute if source_task was successful
-	target_task_failure: string -- the name of the task that should execute if source_task was successful.
+	target_task_failure: string -- the name of the task that should execute if source_task was not successful.
 }
 ```
 
